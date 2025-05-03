@@ -1,0 +1,18 @@
+# Application configuration (Values are optional, defaults are provided)
+
+app:
+  name: "My Summer App" # Override default "Default Summer App"
+  # print-banner: true
+
+server:
+  port: 8081 # Override default 8080
+  # address: "127.0.0.1"
+
+log:
+  level: "debug" # Override default "info"
+  # use-local-time: true
+  format: "compact" # Override default "pretty"
+
+# Add other sections like database, etc.
+# database:
+#   url: "postgres://user:password@localhost/db" 
