@@ -1,0 +1,147 @@
+# .github/workflows/ci.yml
+
+name: Summer Framework CI
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ master ] # Or your primary development branch
+  pull_request:
+    branches: [ master ] # Or your primary development branch
+
+# Cancel concurrent workflow runs for the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always # Enable colored output for cargo commands
+
+jobs:
+  # ========================
+  # Check Formatting & Lint
+  # ========================
+  check_format_lint:
+    name: Check Format & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy # Install rustfmt and clippy components
+
+      - name: Check formatting with rustfmt
+        run: cargo fmt --all --check
+
+      - name: Lint with clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings # Fail on warnings
+
+  # ========================
+  # Build & Test Suite
+  # ========================
+  test_build:
+    name: Test & Build (${{ matrix.os }}, Rust ${{ matrix.rust }})
+    needs: check_format_lint # Run only if format/lint checks pass
+    strategy:
+      fail-fast: false # Don't cancel other jobs in the matrix if one fails
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, beta] # Test against stable and beta Rust
+        # You could add 'nightly' here, but allow failures for it:
+        # include:
+        #   - os: ubuntu-latest
+        #     rust: nightly
+        #     experimental: true # Custom flag to allow failure
+
+    runs-on: ${{ matrix.os }}
+
+    # Allow nightly builds/tests to fail without failing the entire CI run
+    # continue-on-error: ${{ matrix.experimental || false }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (${{ matrix.rust }})
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      # Cache dependencies for faster builds
+      # Key includes OS, Rust version, and Cargo.lock hash
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+        # Optional: Key prefix if needed, useful if you have separate caches
+        # prefix-key: "v1"
+        # Optional: Define cache paths if default isn't sufficient
+        # cache-cargo-home: "true"
+
+      - name: Build workspace
+        # Build everything, including examples and tests, with all features enabled
+        run: cargo build --workspace --verbose --all-features
+
+      - name: Run tests
+        # Run all tests in the workspace, including integration tests and doc tests
+        run: cargo test --workspace --verbose --all-features
+
+  # ========================
+  # Security Audit (Optional but Recommended)
+  # ========================
+  security_audit:
+    name: Security Audit
+    # Optional: Run after successful build/test on one platform
+    # needs: test_build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked # Use --locked for reproducibility
+
+      - name: Run security audit
+        run: cargo audit
+
+  # ========================
+  # Test Coverage (Optional)
+  # ========================
+  # test_coverage:
+  #   name: Test Coverage
+  #   needs: test_build # Depends on successful build/test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Install Rust toolchain (stable)
+  #       uses: dtolnay/rust-toolchain@stable
+  #
+  #     - name: Cache Cargo dependencies
+  #       uses: Swatinem/rust-cache@v2
+  #
+  #     - name: Install cargo-tarpaulin
+  #       run: cargo install cargo-tarpaulin --locked
+  #
+  #     - name: Generate code coverage report (Xml for Codecov)
+  #       run: |
+  #         cargo tarpaulin --workspace \
+  #           --all-features \
+  #           --out Xml \
+  #           --exclude-files "tests/*" "examples/*" "benches/*" \
+  #           --timeout 120 # Increase timeout if needed
+  #
+  #     - name: Upload coverage report to Codecov
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         files: ./cobertura.xml # Default output file name for tarpaulin XML
+  #         fail_ci_if_error: true
+  #         verbose: true
+  #       env:
+  #         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # Add CODECOV_TOKEN as a repository secret

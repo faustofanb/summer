@@ -1,0 +1,100 @@
+# === Rust / Cargo ===
+# Generated build artifacts and log files
+/target/
+Cargo.lock # Often committed, but sometimes ignored in libraries. DECIDE based on policy.
+           # For a library framework like Summer, COMMITTING Cargo.lock is often preferred
+           # for reproducible builds, especially for examples and internal testing.
+           # If end-users might complain about lockfile conflicts, consider ignoring.
+           # Let's assume COMMIT for now based on common library practice.
+# Cargo build report files
+profile.txt
+*.pdb # Windows debugging symbols
+
+# === OS Files ===
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Thumbnails
+._*
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+# Directories potentially created on remote AFP shares
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Linux
+*~
+# KDE directory preferences
+.directory
+# Linux trash folder which might appear on external disk
+.Trash-*
+
+# === IDEs / Editors ===
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (CLion, IntelliJ IDEA with Rust plugin)
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*.swn
+*.sv? # Vim session files
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Atom
+.atom/
+*.[Cc]ache
+
+# Emacs
+*#
+.#*
+
+# === Build & Tooling ===
+# Coverage reports (e.g., from cargo-tarpaulin)
+cobertura.xml
+lcov.info
+*.profraw
+grcov.json
+
+# Benchmark results (if outputting to files)
+*.bench
+
+# === Other ===
+# Secrets or local configuration (if any - adapt as needed)
+# .envrc
+# local.settings.*
+
+# Generated documentation (if built locally and not checked in)
+# docs/book/ # If using mdbook and output is in 'book'

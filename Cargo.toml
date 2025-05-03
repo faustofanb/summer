@@ -1,8 +1,41 @@
 [workspace]
+resolver = "2" # Recommended for modern Rust
+members = [
+    "crates/*",
+    "starters/*",
+    "examples/*", # Include examples if you want workspace commands to affect them
+]
+# Optional: Exclude specific members if needed
+# exclude = []
 
-members = ["boot", "boot-macros", "examples/test_app"]
+# Define shared dependencies for consistency across the workspace
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "0.14", features = ["full"] } # Or hyper 1.x when ready
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+config = { version = "0.13", features = ["yaml", "json", "convert"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+tracing-appender = "0.2"
+thiserror = "1"
+anyhow = "1" # Or use thiserror consistently
+async-trait = "0.1"
+# ... other common dependencies
 
+# Dependency for the proc-macro crate's helpers
+syn = { version = "2", features = ["full", "extra-traits"] }
+quote = "1"
 
-resolver = "2" # Recommended for workspaces
+# Dependencies for specific features (used by relevant crates/starters)
+sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "json" ] }
+redis = { version = "0.23", features = ["tokio-comp"] }
+rustls = "0.21"
+native-tls = "0.2"
+clap = { version = "4", features = ["derive"]} # For optional CLI args
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+lto = true         # Link Time Optimization for smaller/faster binaries
+codegen-units = 1  # Optimize fully, slower build
+panic = 'abort'    # Smaller binary, assumes panics are unrecoverable bugs
+strip = true       # Strip symbols for smaller binary

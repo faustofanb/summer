@@ -1,0 +1,6 @@
+[book]
+authors = ["faustofan"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Summer Book"
