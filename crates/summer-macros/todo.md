@@ -1,73 +1,111 @@
-# Summer Macros - TODO & Progress Log
+# summer-macros 待办事项与思考
 
-## Completed Goals (截至 2025-05-04)
+## 待完成事项
 
-1.  **基础 `#[derive(Component)]` 宏:**
-    - 创建了 `summer-macros` crate。
-    - 实现了基本的 `#[derive(Component)]` 宏，生成 `impl ComponentDefinitionProvider`。
-    - 宏生成的 `BeanDefinition` 包含基本的 `factory_fn`（最初假设 `Default`，后改为接收依赖）。
-    - 宏尝试解析字段作为依赖项（简化版）。
-2.  **增强 `#[derive(Component)]` 宏 (部分):**
-    - 实现了对结构体属性 `#[component(name = "...", scope = "...")]` 的解析。
-    - 实现了对字段属性 `#[autowired]` 的解析，现在只有标记了此注解的字段才被视为依赖项。
-    - 宏生成的 `BeanDefinition` 现在使用解析出的 `name` 和 `scope`。
-    - 工厂函数现在只接收 `@Autowired` 字段对应的依赖，并为非注入字段使用 `Default::default()` (需要目标字段实现 `Default`)。
+1.  **基础设置:**
+    - [ ] 设置 `proc-macro = true` 在 `Cargo.toml`。
+    - [ ] 引入 `syn`, `quote`, `proc-macro2` 依赖。
+    - [ ] （可选）引入 `darling` 简化属性解析。
+2.  **IOC 相关宏:**
+    - [ ] 实现 `#[component]`, `#[service]`, `#[repository]` 属性宏：
+      - 标记结构体为 IOC 组件。
+      - （核心）生成用于注册 BeanDefinition 的静态信息或函数（例如，提供类型信息、构造函数信息）。
+    - [ ] 实现 `#[autowired]` 属性宏（用于字段）：
+      - 标记字段需要依赖注入。
+      - （核心）生成元数据，供 IOC 容器在运行时识别并注入依赖（需要字段名、类型信息）。
+    - [ ] 实现 `#[post_construct]` 属性宏（用于方法）：
+      - 标记方法为初始化回调。
+      - （核心）生成元数据，供 IOC 容器调用。
+    - [ ] 实现 `#[pre_destroy]` 属性宏（用于方法）：
+      - 标记方法为销毁回调。
+      - （核心）生成元数据，供 IOC 容器调用。
+3.  **配置相关宏:**
+    - [ ] 实现 `#[value("${key.subkey[:default_value]}")]` 属性宏（用于字段）：
+      - 标记字段需要从配置注入值。
+      - （核心）解析配置键和可选的默认值，生成元数据供 IOC 容器或专门的配置处理器使用。
+    - [ ] 实现 `#[configuration_properties(prefix = "prefix.subkey")]` 属性宏（用于结构体）：
+      - 标记结构体需要绑定配置项。
+      - （核心）解析前缀，可能需要结合 `serde::Deserialize`，生成元数据或辅助实现。
+4.  **MVC 相关宏:**
+    - [ ] 实现 `#[controller(prefix = "/api")]` / `#[rest_controller(prefix = "/api")]` 属性宏（用于结构体）：
+      - 标记结构体为控制器，可选指定路由前缀。
+      - （核心）生成元数据，用于路由注册和识别控制器 Bean。
+    - [ ] 实现 `#[get("/path")]`, `#[post("/path")]`, `#[put("/path")]`, `#[delete("/path")]`, `#[request_mapping(path="/path", method=HttpMethod::GET)]` 等属性宏（用于方法）：
+      - 标记方法为请求处理器，指定路径和 HTTP 方法。
+      - （核心）生成路由注册信息（路径、方法、处理函数指针或标识）。
+    - [ ] 实现 `#[path_variable]`, `#[query_param]`, `#[request_body]`, `#[request_header]` 等参数属性宏：
+      - 标记函数参数的来源。
+      - （核心）生成元数据或修改函数签名/包装函数，以便 MVC 框架能正确提取和转换参数。
+    - [ ] 实现 `#[exception_handler]` 属性宏（用于方法）：
+      - 标记方法为特定异常类型的处理器。
+      - （核心）生成全局异常处理器的注册信息。
+5.  **AOP 相关宏:**
+    - [ ] 实现 `#[aspect]` 属性宏（用于结构体）：
+      - 标记结构体为切面 Bean。
+    - [ ] 实现 `#[pointcut("expression")]` 属性宏（用于方法）：
+      - 定义切点表达式。
+      - （核心）解析表达式，生成切点匹配逻辑或元数据。
+    - [ ] 实现 `#[before]`, `#[after]`, `#[after_returning]`, `#[after_throwing]`, `#[around]` 属性宏（用于方法）：
+      - 标记方法为通知，并关联到切点。
+      - （核心）生成元数据，供 AOP 框架识别和织入通知。
+      - `#[around]` 可能需要复杂的代码生成来包装原始方法调用。
+6.  **自动配置相关宏:**
+    - [ ] 实现 `#[conditional_on_property(name = "...", having_value = "...")]` 等条件注解宏：
+      - 标记配置类或 Bean 方法，用于条件装配。
+      - （核心）生成元数据，供自动配置模块在运行时判断条件是否满足。
+7.  **错误处理与诊断:**
+    - [ ] 在所有宏中提供清晰、准确的编译时错误信息（使用 `syn::Error` 和 `Span`）。
+    - [ ] 考虑为复杂的宏提供 `#[derive(Debug)]` 或类似的调试输出。
+8.  **测试:**
+    - [ ] 使用 `trybuild` 或类似库为每个宏编写编译时测试用例（成功和失败场景）。
 
-## TODOs (待办事项)
+## 思考过程
 
-1.  **IOC 相关宏:** (关联 F3, F7)
-    - [ ] **完善 `@Component` / `@Service` / `@Repository` / `@Controller` / `@RestController`:** (T1.3)
-      - [ ] 确保正确生成 `BeanDefinition` 元数据 (name, scope, dependencies, lifecycle methods)。
-      - [ ] 支持更多属性 (e.g., `primary`, `lazy`)。
-    - [ ] **实现 `@Autowired`:** (T1.3)
-      - [ ] 正确识别字段类型 (包括 `Arc<T>`, `Option<Arc<T>>`) 并记录依赖。
-      - [ ] 支持构造函数注入的分析。
-    - [ ] **实现 `@Value`:** (T1.3, T1.11)
-      - [ ] 解析 `${key:defaultValue}` 表达式。
-      - [ ] 记录需要注入的配置键。
-    - [ ] **实现 `@PostConstruct` / `@PreDestroy`:** (T2.10)
-      - [ ] 解析注解并记录方法名到 `BeanDefinition`。
-    - [ ] **实现 `@Configuration` / `@Bean`:** (T2.8)
-      - [ ] 解析 `@Configuration` 类。
-      - [ ] 解析 `@Bean` 方法，生成对应的 `BeanDefinition` (包括方法参数依赖)。
-2.  **MVC 相关宏:** (关联 F2, F7)
-    - [ ] **实现路由注解 (`@RequestMapping`, `@GetMapping`, `@PostMapping`, etc.):** (T1.7)
-      - [ ] 解析路径、方法、参数等。
-      - [ ] 生成静态路由信息供运行时使用 (T1.8)。
-    - [ ] **实现参数绑定注解 (`@PathVariable`, `@RequestParam`, `@RequestHeader`, `@RequestBody`):** (T2.1, T2.2)
-      - [ ] 解析注解属性。
-      - [ ] 生成代码或元数据以支持运行时的参数提取和反序列化。
-    - [ ] **实现 `@ExceptionHandler`:** (T2.4)
-      - [ ] 解析注解，记录异常类型和处理方法。
-3.  **AOP 相关宏:** (关联 F6, F7)
-    - [ ] **实现 `@Aspect`:** (T2.5)
-      - [ ] 标记切面类。
-    - [ ] **实现 `@Pointcut`:** (T2.5)
-      - [ ] 解析切点表达式 (初步可支持基于注解或路径)。
-    - [ ] **实现通知注解 (`@Before`, `@AfterReturning`, `@AfterThrowing`, `@After`, `@Around`):** (T2.5)
-      - [ ] 解析注解，关联到 Pointcut。
-    - [ ] **实现编译时织入:** (T2.6)
-      - [ ] 修改被 IOC 管理的 Bean 的方法代码，插入通知调用逻辑。
-4.  **配置相关宏:** (关联 F4, F7)
-    - [ ] **实现 `@ConfigurationProperties`:** (T2.11)
-      - [ ] 解析 `prefix` 属性。
-      - [ ] 记录需要绑定的配置前缀和目标类型。
-5.  **自动配置相关宏:** (关联 F5, F7)
-    - [ ] **实现条件注解 (`@ConditionalOnProperty`, `@ConditionalOnBean`, etc.):** (T2.8)
-      - [ ] 解析注解条件。
-      - [ ] 生成元数据供自动配置模块运行时评估。
-6.  **测试:**
-    - [ ] 为各种宏编写单元测试和集成测试 (使用 `trybuild` 等)。
+### 核心宏设计
 
-## Development Plan Tasks (关联开发计划)
+- **属性宏 (Attribute Macros):** 大部分注解将实现为属性宏，附加在结构体、impl 块、方法或字段上。
+  - **功能:** 解析宏属性（如 `#[get("/users")]` 中的 `"/users"`），解析被标记项（如函数签名、结构体字段），生成新的代码项（如静态注册函数、包装函数）或修改被标记项（较少见）。
+  - **考量:** 需要使用 `syn` 解析 Rust 代码结构，使用 `quote` 生成代码 `TokenStream`。错误处理至关重要，需要将错误定位到源代码的具体位置 (`Span`)。
+- **派生宏 (Derive Macros):** 某些场景可能适合派生宏，例如 `#[derive(Component)]`，但这通常不如属性宏灵活。
+  - **功能:** 主要用于为结构体或枚举自动实现特定的 trait。
+  - **考量:** 对于需要访问属性（如 `prefix`）或标记特定成员（如 `#[autowired]` 字段）的场景，属性宏更合适。
 
-- [T1.3] 实现核心注解 (`@Component`, `@Service`, `@Controller`, `@Autowired`, `@Value` 基础)
-- [T1.7] 实现 MVC 路由注解 (`@GetMapping`, `@PostMapping` 等)
-- [T1.8] 实现静态路由表生成 (部分)
-- [T2.1] 实现请求绑定注解 (`@PathVariable`, `@RequestParam`, `@RequestHeader`)
-- [T2.2] 实现 `@RequestBody` 宏
-- [T2.5] 实现 AOP 核心注解 (`@Aspect`, `@Pointcut`, `@Before`, `@AfterReturning` 等)
-- [T2.6] 实现编译时 AOP 织入
-- [T2.8] 实现自动配置基础注解 (`@Configuration`, `@Bean`, `@Conditional...` 基础)
-- [T2.10] 实现生命周期注解 (`@PostConstruct`, `@PreDestroy`)
-- [T2.11] 实现 `@ConfigurationProperties` 注解
+**关键宏的功能概要:**
+
+- `#[component]`/`#[service]`/`#[repository]`: 识别 Bean 类型，可能生成一个关联函数或静态项，包含类型信息 (`TypeId`) 和构造函数元数据（参数类型）。
+- `#[autowired]`: 标记字段，生成元数据（字段名、字段类型 `TypeId`），IOC 容器据此进行注入。
+- `#[value(...)]`: 标记字段，生成元数据（配置键、字段类型），配置模块据此注入。
+- `#[controller(...)]`/`#[rest_controller(...)]`: 标记控制器，生成元数据（路由前缀、类型信息）。
+- `#[get(...)]`/`#[post(...)]` 等: 标记处理方法，生成路由条目信息（HTTP 方法、路径模板、关联的函数标识）。
+- 参数宏 (`#[path_variable]` 等): 可能通过生成包装函数或提供元数据，告知 MVC 框架如何从请求中提取参数并进行类型转换。
+- `#[aspect]`: 标记切面类。
+- `#[pointcut(...)]`: 解析表达式，生成匹配逻辑元数据。
+- 通知宏 (`#[before]` 等): 关联通知方法和切点，生成元数据。
+- 条件宏 (`#[conditional_on_property(...)]`): 解析条件参数，生成元数据供自动配置模块使用。
+
+### 实现考量与改进目标
+
+- **代码生成策略:** 宏应该生成什么？
+  - **元数据:** 生成静态数据结构或函数，包含类型信息、注解参数等，供运行时框架（IOC, MVC, AOP）查询和使用。这是比较常见且相对简单的方式。
+  - **直接生成逻辑:** 例如，`#[around]` 宏可能需要生成一个包装函数，直接包含调用原始方法和通知逻辑的代码。这更复杂，但可能性能更好。
+  - **结合:** 可能需要结合两者。
+- **错误处理:** 宏必须在编译时提供清晰的错误。使用 `syn::Error::new_spanned` 将错误关联到源代码的具体位置。
+- **宏卫生 (Hygiene):** 确保宏生成的代码不会意外地与用户代码中的标识符冲突。`quote` 默认处理大部分情况，但需注意显式创建的标识符。
+- **编译时间:** 复杂的宏会增加编译时间。应尽量保持宏逻辑简洁高效，避免不必要的计算和代码生成。
+- **可测试性:** 使用 `trybuild` 对宏进行编译时测试，覆盖各种有效和无效的输入。
+- **与其他模块的契约:** 宏生成的代码或元数据必须符合 IOC、MVC、AOP 等模块的预期。接口需要明确定义和文档化。
+- **改进:**
+  - 探索更高级的宏技术以减少样板代码。
+  - 优化宏的性能，减少编译时间。
+  - 提供更智能的编译时检查和错误提示。
+  - 考虑使用 `inventory` 或类似 crate 在编译时收集宏生成的元数据，简化运行时的扫描过程。
+
+### 潜在漏洞分析
+
+- **代码生成错误:** 生成的 Rust 代码语法无效或逻辑错误，导致编译失败或运行时 panic。
+- **类型信息错误:** 宏未能正确提取或传递类型信息 (`TypeId`)，导致 IOC 注入失败或类型转换 panic。
+- **Span 信息丢失或错误:** 编译错误信息未能指向用户代码的正确位置，增加调试难度。
+- **宏卫生问题:** 生成的代码与用户代码发生命名冲突。
+- **解析不健壮:** 宏未能正确处理所有合法的 Rust 语法或用户输入的变化，导致宏展开失败。
+- **性能问题:** 宏展开过程过于复杂或低效，显著增加项目编译时间。
+- **与运行时逻辑不匹配:** 宏生成的元数据或代码与运行时框架的预期不一致，导致功能异常。

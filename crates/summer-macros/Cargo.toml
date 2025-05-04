@@ -4,11 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-proc-macro = true # Important for procedural macros
+proc-macro = true
 
 [dependencies]
-syn = { version = "2.0", features = ["full", "parsing"] } # Updated to 2.0
+syn = { version = "2.0", features = ["full", "extra-traits"] } # Updated to 2.0
 quote = "1.0"
 proc-macro2 = "1.0"
-# Change dependency to summer-core
+# Dependency on summer-core to access BeanDefinitionMetadata
 summer-core = { path = "../summer-core" }
+
+[dev-dependencies]
+# For testing macros
+trybuild = "1.0"

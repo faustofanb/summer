@@ -1,15 +1,17 @@
-// Re-export core types from summer-core for the public API of summer-ioc
-pub use summer_core::{
-    BeanDefinition, BeanDependency, BeanScope, ComponentDefinitionProvider, IocError,
-};
+//! Summer IOC (Inversion of Control) Core Crate
+//! Provides the foundation for dependency injection and component management.
 
-// Define modules and export other public items from summer-ioc itself
-pub mod builder;
-pub mod context;
-pub mod factory;
-pub mod processor;
+pub mod container;
+pub mod definition;
+pub mod error;
 
-pub use builder::ApplicationContextBuilder;
-pub use context::ApplicationContext;
-pub use factory::{BeanFactory, BeanRegistry};
-pub use processor::{BeanFactoryPostProcessor, BeanPostProcessor};
+// Re-export key types for easier access
+pub use container::IocContainer;
+pub use definition::BeanDefinition;
+pub use error::IocError;
+
+// --- Traits and other public items to be added later ---
+// pub trait BeanFactory { ... }
+// pub trait ApplicationContext: BeanFactory { ... }
+// pub trait BeanPostProcessor { ... }
+// pub trait Aware { ... } // e.g., BeanNameAware, ApplicationContextAware

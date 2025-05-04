@@ -1,27 +1,25 @@
-// Create or modify this file to potentially include a general error type
-// or ensure IocError is handled correctly if defined in ioc.rs
+use std::any::TypeId;
+use thiserror::Error;
 
-// Example: Define a general SummerError enum
-#[derive(Debug)]
-pub enum SummerError {
-    Io(std::io::Error),
-    Config(String),            // Example config error variant
-    Ioc(super::ioc::IocError), // Wrap IocError
-    Other(String),
+#[derive(Error, Debug)]
+pub enum ConstructorError {
+    #[error("Constructor error.")]
+    BaseError,
+
+    #[error("Constructor error with message: {0}.")]
+    BaseMsgError(String),
+    
+    #[error("Container has not been initialized yet.")]
+    ContainerNotInitialized,
+
+    #[error("Bean definition not found for type ID: {0:?}")]
+    BeanNotFoundByType(TypeId),
+
+    #[error("Bean definition not found for name: {0}")]
+    BeanNotFoundByName(String),
+    
+    #[error(
+        "Multiple beans found for type ID: {0:?}. Use qualifiers or @Primary to disambiguate."
+    )]
+    MultipleBeansFound(TypeId),
 }
-
-// Implement From traits for easier error conversion
-impl From<std::io::Error> for SummerError {
-    fn from(err: std::io::Error) -> Self {
-        SummerError::Io(err)
-    }
-}
-
-impl From<super::ioc::IocError> for SummerError {
-    fn from(err: super::ioc::IocError) -> Self {
-        SummerError::Ioc(err)
-    }
-}
-
-// Implement std::error::Error and std::fmt::Display for SummerError
-// ...

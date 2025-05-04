@@ -3,17 +3,27 @@ name = "summer-ioc"
 version = "0.1.0"
 edition = "2021"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [dependencies]
-tokio = { version = "1.0", features = ["full"] }
-async-trait = "0.1"
-futures = "0.3"
-thiserror = "1.0"
+summer-core = { path = "../summer-core" }
+# Add dependencies based on DDS v2.0 implementation
+tokio = { version = "1", features = [
+    "sync",
+    "rt",
+] } # For async Mutex if shutdown is async
+parking_lot = "0.12" # Faster RwLock for BeanRegistry
+thiserror = "1.0" # For IocError
+async-trait = "0.1" # If ShutdownCommand or Scope methods become async
+downcast-rs = "1.2.0" # To downcast Arc<dyn Any + Send + Sync>
+log = "0.4" # For logging within the IOC module
+anyhow = "1.0" # Potentially for easier error handling within build/lifecycle
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-summer-core = { path = "../summer-core" }
-
+futures = "0.3"
 [dev-dependencies]
 summer-macros = { path = "../summer-macros" }
 tokio = { version = "1", features = ["full"] }
 summer-core = { path = "../summer-core" }
+env_logger = "0.9"                             # Or latest version
