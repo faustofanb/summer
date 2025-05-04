@@ -1,6 +1,33 @@
 [package]
 name = "summer-logging"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "Summer Framework 的日志模块"
+repository = "https://github.com/summer-rust/summer-framework"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
+# 基础日志和追踪
+tracing = { version = "0.1", features = ["attributes"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+# 配置和错误处理
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+# 时间处理
+chrono = { version = "0.4", features = ["serde"] }
+
+# 异步支持
+tokio = { version = "1.0", features = ["io-util"] }
+
+[dev-dependencies]
+# 基础日志和追踪
+tracing = { version = "0.1", features = ["attributes"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+# 时间处理
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1.0", features = ["full"] }
+regex = "1"        # For flexible matching
+lazy_static = "1.4" # Or once_cell, for compiling regexes once
