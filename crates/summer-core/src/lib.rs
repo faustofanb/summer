@@ -1,14 +1,11 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+// Define modules within summer-core
+pub mod error;
+pub mod ioc; // Make the ioc module public
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// Re-export key types for easier use
+pub use error::SummerError; // Assuming you have a core error type
+pub use ioc::{
+    BeanDefinition, BeanDependency, BeanScope, ComponentDefinitionProvider, IocContainer, IocError,
+};
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+// Other core functionalities can be added here
